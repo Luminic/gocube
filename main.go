@@ -3,6 +3,12 @@ package main
 import "fmt"
 
 func main() {
-	cube := newCube()
-	fmt.Println(cube.String())
+	c := newCube()
+	for range 5 {
+		c.U()
+		c.R()
+		c.UP()
+		c.RP()
+	}
+	fmt.Println(c.String())
 }

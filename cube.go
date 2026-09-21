@@ -308,3 +308,107 @@ func (c *Cube) B() {
 	//Swap the 4 egdes
 	c.rotEdge(eval)
 }
+
+//Backwards
+func (c *Cube) UP() {
+	cval := [4]CornerPiece{0, 2, 3, 1}
+	c.moveCorner(cval)
+	c.rotCorner(cval, WY_frontback, WY_leftright)
+	c.moveEdge([4]EdgePiece{0, 1, 3, 2})
+}
+
+func (c *Cube) DP() {
+	cval := [4]CornerPiece{4, 6, 7, 5}
+	c.moveCorner(cval)
+	c.rotCorner(cval, WY_frontback, WY_leftright)
+	c.moveEdge([4]EdgePiece{8, 9, 11, 10})
+}
+
+func (c *Cube) LP() {
+	cval := [4]CornerPiece{0, 4, 6, 2}
+	c.moveCorner(cval)
+	c.rotCorner(cval, WY_updown, WY_frontback)
+	c.moveEdge([4]EdgePiece{1, 4, 9, 6})
+}
+
+func (c *Cube) RP() {
+	cval := [4]CornerPiece{1, 3, 7, 5}
+	c.moveCorner(cval)
+	c.rotCorner(cval, WY_updown, WY_frontback)
+	c.moveEdge([4]EdgePiece{2, 7, 10, 5})
+}
+
+func (c *Cube) FP() {
+	cval := [4]CornerPiece{2, 6, 7, 3}
+	c.moveCorner(cval)
+	c.rotCorner(cval, WY_updown, WY_leftright)
+	eval := [4]EdgePiece{3, 6, 11, 7}
+	c.moveEdge(eval)
+	c.rotEdge(eval)
+}
+
+func (c *Cube) BP() {
+	cval := [4]CornerPiece{0, 1, 5, 4}
+	c.moveCorner(cval)
+	c.rotCorner(cval, WY_updown, WY_leftright)
+	eval := [4]EdgePiece{0, 5, 8, 4}
+	c.moveEdge(eval)
+	c.rotEdge(eval)
+}
+
+//Double
+func (c *Cube) U2() {
+	cval := [4]CornerPiece{0, 2, 3, 1}
+	c.moveCorner2(cval)
+	c.moveEdge2([4]EdgePiece{0, 1, 3, 2})
+}
+
+func (c *Cube) D2() {
+	cval := [4]CornerPiece{4, 6, 7, 5}
+	c.moveCorner2(cval)
+	c.moveEdge2([4]EdgePiece{8, 9, 11, 10})
+}
+
+func (c *Cube) L2() {
+	cval := [4]CornerPiece{0, 4, 6, 2}
+	c.moveCorner2(cval)
+	c.moveEdge2([4]EdgePiece{1, 4, 9, 6})
+}
+
+func (c *Cube) R2() {
+	cval := [4]CornerPiece{1, 3, 7, 5}
+	c.moveCorner2(cval)
+	c.moveEdge2([4]EdgePiece{2, 7, 10, 5})
+}
+
+func (c *Cube) F2() {
+	cval := [4]CornerPiece{2, 6, 7, 3}
+	c.moveCorner2(cval)
+	eval := [4]EdgePiece{3, 6, 11, 7}
+	c.moveEdge2(eval)
+}
+
+func (c *Cube) B2() {
+	cval := [4]CornerPiece{0, 1, 5, 4}
+	c.moveCorner2(cval)
+	eval := [4]EdgePiece{0, 5, 8, 4}
+	c.moveEdge2(eval)
+}
+
+func (c *Cube) moveCorner2(clist [4]CornerPiece) {
+	cornerP := c.corner_piece[clist[3]]
+	c.corner_piece[clist[3]] = c.corner_piece[clist[1]]
+	c.corner_piece[clist[1]] = cornerP
+	cornerP = c.corner_piece[clist[2]]
+	c.corner_piece[clist[2]] = c.corner_piece[clist[0]]
+	c.corner_piece[clist[0]] = cornerP
+}
+
+func (c *Cube) moveEdge2(elist [4]EdgePiece) {
+	edgeP := c.edge_piece[elist[3]]
+	c.edge_piece[elist[3]] = c.edge_piece[elist[1]]
+	c.edge_piece[elist[1]] = edgeP
+	edgeP = c.edge_piece[elist[2]]
+	c.edge_piece[elist[2]] = c.edge_piece[elist[0]]
+	c.edge_piece[elist[0]] = edgeP
+}
