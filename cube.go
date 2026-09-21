@@ -51,7 +51,7 @@ var edge_colors = [12][2]Colors{
 	{Yellow, Red},
 }
 
-func cc(pos CornerPiece) bool {
+func is_corner_cc(pos CornerPiece) bool {
 	switch pos {
 	case 0, 3, 5, 6:
 		return true
@@ -62,15 +62,16 @@ func cc(pos CornerPiece) bool {
 
 func (c *Cube) getCornerColor(pos CornerPiece, offset CornerRot) Colors {
 	piece := c.corner_piece[pos]
-	if cc(piece) == cc(pos) {
-		return corner_colors[piece][(offset-c.corner_rot[piece])%3]
+	if is_corner_cc(piece) == is_corner_cc(pos) {
+		num := ((int(offset)-int(c.corner_rot[piece]))%3 + 3) % 3
+		return corner_colors[piece][num]
 	} else {
-		return corner_colors[piece][(-offset+c.corner_rot[piece])%3]
+		num := ((-int(offset)+int(c.corner_rot[piece]))%3 + 3) % 3
+		return corner_colors[piece][num]
 	}
 }
 
 func (c *Cube) String() string {
-	c.U()
 	rstring := ""
 	rstring += color_codes[c.getCornerColor(0, 0)] + "  @"
 	rstring += color_codes[c.getCornerColor(1, 0)] + "@\n"
@@ -203,7 +204,7 @@ func (c *Cube) U() {
 	cval := [4]CornerPiece{0, 1, 3, 2}
 	c.moveCorner(cval)
 	//FB<->LR
-	c.rotCorner(cval, WY_updown, WY_leftright)
+	c.rotCorner(cval, WY_frontback, WY_leftright)
 	//Edges 0->2->3->1
 	c.moveEdge([4]EdgePiece{0, 2, 3, 1})
 	//No change in rot
@@ -214,7 +215,7 @@ func (c *Cube) D() {
 	cval := [4]CornerPiece{4, 5, 7, 6}
 	c.moveCorner(cval)
 	//FB<->LR
-	c.rotCorner(cval, WY_updown, WY_leftright)
+	c.rotCorner(cval, WY_frontback, WY_leftright)
 	//Edges 8->10->11->9
 	c.moveEdge([4]EdgePiece{8, 10, 11, 9})
 	//No change in rot
