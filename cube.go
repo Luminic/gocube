@@ -1,6 +1,9 @@
 package main
 
-import "math/rand"
+import (
+	"math/rand"
+	"slices"
+)
 
 // Red front, white top
 
@@ -311,6 +314,22 @@ func (c *Cube) move(m Move) {
 	}
 }
 
+func (c *Cube) true_scramble(count uint) {
+	var temp Cube
+	past_states := []Cube{*c}
+	i := uint(0)
+	for i < count {
+		temp = *c
+		move_num := Move(rand.Intn(18))
+		temp.move(move_num)
+		if !slices.Contains(past_states, temp) {
+			past_states = append(past_states, temp)
+			c.move(move_num)
+			i++
+		}
+	}
+}
+
 func (c *Cube) scramble(count uint) {
 	for range count {
 		c.move(Move(rand.Intn(18)))
@@ -388,7 +407,7 @@ func (c *Cube) B() {
 	c.rotEdge(eval)
 }
 
-//Backwards
+// Backwards
 func (c *Cube) UP() {
 	cval := [4]CornerPiece{0, 2, 3, 1}
 	c.moveCorner(cval)
@@ -435,7 +454,7 @@ func (c *Cube) BP() {
 	c.rotEdge(eval)
 }
 
-//Double
+// Double
 func (c *Cube) U2() {
 	cval := [4]CornerPiece{0, 2, 3, 1}
 	c.moveCorner2(cval)

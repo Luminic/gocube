@@ -64,8 +64,9 @@ func (n *Node) bfs() []Move {
 			sol := []Move{}
 			for node.prev_state != nil {
 				sol = append([]Move{node.last_turn}, sol...)
-				return sol
+				node = *node.prev_state
 			}
+			return sol
 		}
 		queue = append(queue[1:], node.get_children()...)
 	}

@@ -4,8 +4,7 @@ import "fmt"
 
 func main() {
 	c := newCube()
-	//c.scramble(3)
-	c.U()
+	c.true_scramble(5)
 	fmt.Println(c.String())
 	n := newNode(c)
 	sol := n.bfs()
