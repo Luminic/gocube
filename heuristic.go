@@ -85,29 +85,41 @@ func createHeuristicCorner() []uint8 {
 		This function will start from the solved state
 		and track how far away a state is from the end state
 	*/
-	queue := []Node{newNode(newCube())}
+	var search, to_search map[Cube]struct{}
+	search[newCube()] = struct{}{}
 	i := 0
+	depth := 0
 	for i < max_possible {
-		node := queue[0]
-		rank := node.cube.getCornerRanking()
-		// Check if state was already written to
-		if !written[rank] {
-			written[rank] = true
-			// If not write the state
-			if rank%2 == 0 {
-				buffer[rank/2] |= uint8(node.depth)
-			} else {
-				buffer[rank/2] |= uint8(node.depth << 4)
+		for cube := range search {
+			rank := cube.getCornerRanking()
+			// Check if state was already written to
+			if !written[rank] {
+				written[rank] = true
+				// If not write the state
+				if rank%2 == 0 {
+					buffer[rank/2] |= uint8(depth)
+				} else {
+					buffer[rank/2] |= uint8(depth << 4)
+				}
+				i++
+				if i%1000000 == 0 {
+					fmt.Println(i)
+				}
+				// Only add if a new state was explored
+				// Search through all children to add to next step
+				for x := range 18 {
+					move := Move(x)
+					c := cube
+					c.move(move)
+					// add if not visited
+					if !written[c.getCornerRanking()] {
+						to_search[c] = struct{}{}
+					}
+				}
 			}
-			i++
-			if i%1000000 == 0 {
-				fmt.Println(i)
-			}
-			// Only add if a new state was explored
-			queue = append(queue[1:], node.get_children()...)
-		} else {
-			queue = queue[1:]
 		}
+		depth++
+		// TODO: change search to to_search and clear to_search
 	}
 	return buffer
 }
