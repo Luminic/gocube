@@ -114,47 +114,46 @@ func createHeuristicCorner() []uint8 {
 	// can fit 2 values into one uint8
 	buffer := make([]uint8, max_possible/2)
 	written := make([]bool, max_possible)
+	// Keep track of current and next layer
+	now := make([]bool, max_possible)
+	next := make([]bool, max_possible)
 	/*
 		This function will start from the solved state
 		and track how far away a state is from the end state
 	*/
-	search := make(map[Cube]struct{})
-	to_search := make(map[Cube]struct{})
-	search[newCube()] = struct{}{}
+	now[0] = true
 	i := 0
 	depth := 0
 	for i < max_possible {
-		for cube := range search {
-			rank := cube.getCornerRanking()
-			// Check if state was already written to
-			if !written[rank] {
-				written[rank] = true
-				// If not write the state
-				if rank%2 == 0 {
-					buffer[rank/2] |= uint8(depth)
+		for rcube, search := range now {
+			// If we want to search it
+			if search {
+				if rcube%2 == 0 {
+					buffer[rcube/2] |= uint8(depth)
 				} else {
-					buffer[rank/2] |= uint8(depth << 4)
+					buffer[rcube/2] |= uint8(depth << 4)
 				}
-				i++
 				if i%1000000 == 0 {
 					fmt.Println(i)
 				}
-				// Only add if a new state was explored
-				// Search through all children to add to next step
+				i++
+				// Get our cube
+				cube := unrankCorner(uint(rcube))
 				for x := range 18 {
 					move := Move(x)
 					c := cube
 					c.move(move)
 					// add if not visited
-					if !written[c.getCornerRanking()] {
-						to_search[c] = struct{}{}
+					c_rank := c.getCornerRanking()
+					if !written[c_rank] {
+						next[c_rank] = true
 					}
 				}
 			}
 		}
 		depth++
-		search = to_search
-		to_search = make(map[Cube]struct{})
+		now = next
+		next = make([]bool, max_possible)
 	}
 	return buffer
 }
