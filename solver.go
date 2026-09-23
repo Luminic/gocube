@@ -1,7 +1,5 @@
 package main
 
-import "os"
-
 type Node struct {
 	cube       Cube
 	prev_state *Node
@@ -95,7 +93,7 @@ func (n *Node) IDA() []Move {
 
 func (n *Node) IDA_rec(target *Cube, max_depth uint) *Node {
 	heuristic := n.cube.getHeuristic()
-	if max_depth < n.depth+heuristic {
+	if max_depth < n.depth+uint(heuristic) {
 		return nil
 	} else if n.cube == *target {
 		return n
@@ -107,60 +105,4 @@ func (n *Node) IDA_rec(target *Cube, max_depth uint) *Node {
 		}
 	}
 	return nil
-}
-
-func (c *Cube) getHeuristic() uint {
-	return 0
-}
-
-var GLOBAL_BUFFER struct {
-	corner []uint8
-	edges1 []uint8
-	edges2 []uint8
-}
-
-func initHeuristics() error {
-	// Corners
-	corner, err := os.ReadFile("corner_data.bin")
-	if err != nil {
-		corner = createHeuristicCorner()
-		err = os.WriteFile("corner_data.bin", corner, 0644)
-	}
-	GLOBAL_BUFFER.corner = corner
-	// Edge group 1
-	edges1, err := os.ReadFile("edges1_data.bin")
-	if err != nil {
-		edges1 = createHeuristicEdge1()
-		err = os.WriteFile("edges1_data.bin", edges1, 0644)
-	}
-	GLOBAL_BUFFER.edges1 = edges1
-	// Edge group 2
-	edges2, err := os.ReadFile("edges2_data.bin")
-	if err != nil {
-		edges2 = createHeuristicEdge2()
-		err = os.WriteFile("edges2_data.bin", edges2, 0644)
-	}
-	GLOBAL_BUFFER.edges2 = edges2
-	return err
-}
-
-func createHeuristicCorner() []uint8 {
-	max_possible := 0
-	buffer := make([]uint8, max_possible)
-	// TODO: Write to buffer
-	return buffer
-}
-
-func createHeuristicEdge1() []uint8 {
-	max_possible := 0
-	buffer := make([]uint8, max_possible)
-	// TODO: Write to buffer
-	return buffer
-}
-
-func createHeuristicEdge2() []uint8 {
-	max_possible := 0
-	buffer := make([]uint8, max_possible)
-	// TODO: Write to buffer
-	return buffer
 }
