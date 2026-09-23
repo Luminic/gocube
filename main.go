@@ -3,6 +3,10 @@ package main
 import "fmt"
 
 func main() {
+	err := initHeuristics()
+	if err != nil {
+		fmt.Println("Could not create file!")
+	}
 	c := newCube()
 	c.true_scramble(7)
 	fmt.Println(c.String())
