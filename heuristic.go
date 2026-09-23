@@ -16,6 +16,39 @@ func (c *Cube) getHeuristic() uint8 {
 	return value
 }
 
+func unrankCorner(rank uint) Cube {
+	corner_pos := [8]CornerPiece{}
+	corner_rot := [8]CornerRot{}
+	rank_positions := rank / 2187
+	rank_orientations := rank % 2187
+	// positions
+	avalible_pieces := make([]CornerPiece, 8)
+	for i := range 8 {
+		avalible_pieces[i] = CornerPiece(i)
+	}
+	for i := range 8 {
+		pieces_left := 8 - i
+		val := rank_positions % uint(pieces_left)
+		corner_pos[i] = avalible_pieces[val]
+		avalible_pieces = append(avalible_pieces[:val], avalible_pieces[val+1:]...)
+		rank_positions /= uint(pieces_left)
+	}
+	//Orientations
+	last := 0
+	for x := range 7 {
+		rot := rank_orientations % 3
+		corner_rot[x] = CornerRot(rot)
+		last = (last + int(rot)) % 3
+		rank_orientations /= 3
+	}
+	corner_rot[7] = CornerRot(last)
+
+	//Initialize cube, edges dont matter here
+	edge_pos := [12]EdgePiece{}
+	edge_rot := [12]EdgeRot{}
+	return Cube{corner_piece: corner_pos, corner_rot: corner_rot, edge_piece: edge_pos, edge_rot: edge_rot}
+}
+
 func (c *Cube) getCornerRanking() uint {
 	// Rank the positions
 	rank_positions := uint(0)
@@ -85,7 +118,8 @@ func createHeuristicCorner() []uint8 {
 		This function will start from the solved state
 		and track how far away a state is from the end state
 	*/
-	var search, to_search map[Cube]struct{}
+	search := make(map[Cube]struct{})
+	to_search := make(map[Cube]struct{})
 	search[newCube()] = struct{}{}
 	i := 0
 	depth := 0
@@ -119,7 +153,8 @@ func createHeuristicCorner() []uint8 {
 			}
 		}
 		depth++
-		// TODO: change search to to_search and clear to_search
+		search = to_search
+		to_search = make(map[Cube]struct{})
 	}
 	return buffer
 }
