@@ -1,5 +1,7 @@
 package main
 
+import "math/rand"
+
 // Red front, white top
 
 // Corner values
@@ -235,6 +237,83 @@ func (c *Cube) rotEdge(clist [4]EdgePiece) {
 	for i := range 4 {
 		piece := c.edge_piece[clist[i]]
 		c.edge_rot[piece] = !c.edge_rot[piece]
+	}
+}
+
+type Move uint8
+
+const (
+	U Move = iota
+	UP
+	U2
+	F
+	FP
+	F2
+	L
+	LP
+	L2
+	D
+	DP
+	D2
+	B
+	BP
+	B2
+	R
+	RP
+	R2
+	NO_MOVE
+)
+
+func (c *Cube) manyMoves(moves []Move) {
+	for _, move := range moves {
+		c.move(move)
+	}
+}
+
+func (c *Cube) move(m Move) {
+	switch m {
+	case U:
+		c.U()
+	case UP:
+		c.UP()
+	case U2:
+		c.U2()
+	case F:
+		c.F()
+	case FP:
+		c.FP()
+	case F2:
+		c.F2()
+	case L:
+		c.L()
+	case LP:
+		c.LP()
+	case L2:
+		c.L2()
+	case D:
+		c.D()
+	case DP:
+		c.DP()
+	case D2:
+		c.D2()
+	case B:
+		c.B()
+	case BP:
+		c.BP()
+	case B2:
+		c.B2()
+	case R:
+		c.R()
+	case RP:
+		c.RP()
+	case R2:
+		c.R2()
+	}
+}
+
+func (c *Cube) scramble(count uint) {
+	for range count {
+		c.move(Move(rand.Intn(18)))
 	}
 }
 
