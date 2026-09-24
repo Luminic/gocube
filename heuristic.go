@@ -5,7 +5,50 @@ import (
 	"os"
 )
 
+func initHeuristics() error {
+	// Corners
+	corner, err := os.ReadFile("corner_data.bin")
+	if err != nil {
+		corner = createHeuristicCorner()
+		err = os.WriteFile("corner_data.bin", corner, 0644)
+	}
+	GLOBAL_BUFFER.corner = corner
+	// Edge group 1
+	edges1, err := os.ReadFile("edges1_data.bin")
+	if err != nil {
+		edges1 = createHeuristicEdge1()
+		err = os.WriteFile("edges1_data.bin", edges1, 0644)
+	}
+	GLOBAL_BUFFER.edges1 = edges1
+	// Edge group 2
+	edges2, err := os.ReadFile("edges2_data.bin")
+	if err != nil {
+		edges2 = createHeuristicEdge2()
+		err = os.WriteFile("edges2_data.bin", edges2, 0644)
+	}
+	GLOBAL_BUFFER.edges2 = edges2
+	return err
+}
+
+var GLOBAL_BUFFER struct {
+	corner []uint8
+	edges1 []uint8
+	edges2 []uint8
+}
+
 func (c *Cube) getHeuristic() uint8 {
+	heuristics := [3]uint8{c.getCornerHeuristic(), c.getEdge1Heuristic(), c.getEdge2Heuristic()}
+	max := uint8(0)
+	for _, h := range heuristics {
+		if max < h {
+			max = h
+		}
+	}
+	return max
+}
+
+// CORNER SECTION
+func (c *Cube) getCornerHeuristic() uint8 {
 	rank := c.getCornerRanking()
 	value := GLOBAL_BUFFER.corner[rank/2]
 	if rank%2 == 1 {
@@ -77,37 +120,6 @@ func (c *Cube) getCornerRanking() uint {
 	return rank_positions*2187 + rank_orientations
 }
 
-var GLOBAL_BUFFER struct {
-	corner []uint8
-	edges1 []uint8
-	edges2 []uint8
-}
-
-func initHeuristics() error {
-	// Corners
-	corner, err := os.ReadFile("corner_data.bin")
-	if err != nil {
-		corner = createHeuristicCorner()
-		err = os.WriteFile("corner_data.bin", corner, 0644)
-	}
-	GLOBAL_BUFFER.corner = corner
-	// // Edge group 1
-	// edges1, err := os.ReadFile("edges1_data.bin")
-	// if err != nil {
-	// 	edges1 = createHeuristicEdge1()
-	// 	err = os.WriteFile("edges1_data.bin", edges1, 0644)
-	// }
-	// GLOBAL_BUFFER.edges1 = edges1
-	// // Edge group 2
-	// edges2, err := os.ReadFile("edges2_data.bin")
-	// if err != nil {
-	// 	edges2 = createHeuristicEdge2()
-	// 	err = os.WriteFile("edges2_data.bin", edges2, 0644)
-	// }
-	// GLOBAL_BUFFER.edges2 = edges2
-	return err
-}
-
 func createHeuristicCorner() []uint8 {
 	//8*7*6*5*4*3*2*1 * 3^7
 	max_possible := 88179840
@@ -160,11 +172,35 @@ func createHeuristicCorner() []uint8 {
 	return buffer
 }
 
+// EDGE1 SECTION
+func (c *Cube) getEdge1Heuristic() uint8 {
+	// rank := c.getCornerRanking()
+	value := GLOBAL_BUFFER.corner[rank/2]
+	if rank%2 == 1 {
+		value >>= 4
+	} else {
+		value &= 0xF
+	}
+	return value
+}
+
 func createHeuristicEdge1() []uint8 {
 	max_possible := 0
 	buffer := make([]uint8, max_possible)
 	// TODO: Write to buffer
 	return buffer
+}
+
+// EDGE2 SECTION
+func (c *Cube) getEdge2Heuristic() uint8 {
+	// rank := c.getCornerRanking()
+	value := GLOBAL_BUFFER.corner[rank/2]
+	if rank%2 == 1 {
+		value >>= 4
+	} else {
+		value &= 0xF
+	}
+	return value
 }
 
 func createHeuristicEdge2() []uint8 {
