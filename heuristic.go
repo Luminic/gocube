@@ -91,20 +91,20 @@ func initHeuristics() error {
 		err = os.WriteFile("corner_data.bin", corner, 0644)
 	}
 	GLOBAL_BUFFER.corner = corner
-	// Edge group 1
-	edges1, err := os.ReadFile("edges1_data.bin")
-	if err != nil {
-		edges1 = createHeuristicEdge1()
-		err = os.WriteFile("edges1_data.bin", edges1, 0644)
-	}
-	GLOBAL_BUFFER.edges1 = edges1
-	// Edge group 2
-	edges2, err := os.ReadFile("edges2_data.bin")
-	if err != nil {
-		edges2 = createHeuristicEdge2()
-		err = os.WriteFile("edges2_data.bin", edges2, 0644)
-	}
-	GLOBAL_BUFFER.edges2 = edges2
+	// // Edge group 1
+	// edges1, err := os.ReadFile("edges1_data.bin")
+	// if err != nil {
+	// 	edges1 = createHeuristicEdge1()
+	// 	err = os.WriteFile("edges1_data.bin", edges1, 0644)
+	// }
+	// GLOBAL_BUFFER.edges1 = edges1
+	// // Edge group 2
+	// edges2, err := os.ReadFile("edges2_data.bin")
+	// if err != nil {
+	// 	edges2 = createHeuristicEdge2()
+	// 	err = os.WriteFile("edges2_data.bin", edges2, 0644)
+	// }
+	// GLOBAL_BUFFER.edges2 = edges2
 	return err
 }
 
@@ -122,6 +122,7 @@ func createHeuristicCorner() []uint8 {
 		and track how far away a state is from the end state
 	*/
 	now[0] = true
+	written[0] = true
 	i := 0
 	depth := 0
 	for i < max_possible {
@@ -133,7 +134,7 @@ func createHeuristicCorner() []uint8 {
 				} else {
 					buffer[rcube/2] |= uint8(depth << 4)
 				}
-				if i%1000000 == 0 {
+				if i%100000 == 0 {
 					fmt.Println(i)
 				}
 				i++
@@ -146,6 +147,7 @@ func createHeuristicCorner() []uint8 {
 					// add if not visited
 					c_rank := c.getCornerRanking()
 					if !written[c_rank] {
+						written[c_rank] = true
 						next[c_rank] = true
 					}
 				}
