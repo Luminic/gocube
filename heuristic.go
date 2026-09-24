@@ -20,13 +20,13 @@ func initHeuristics() error {
 		err = os.WriteFile("edges1_data.bin", edges1, 0644)
 	}
 	GLOBAL_BUFFER.edges1 = edges1
-	// Edge group 2
-	edges2, err := os.ReadFile("edges2_data.bin")
-	if err != nil {
-		edges2 = createHeuristicEdge2()
-		err = os.WriteFile("edges2_data.bin", edges2, 0644)
-	}
-	GLOBAL_BUFFER.edges2 = edges2
+	// // Edge group 2
+	// edges2, err := os.ReadFile("edges2_data.bin")
+	// if err != nil {
+	// 	edges2 = createHeuristicEdge2()
+	// 	err = os.WriteFile("edges2_data.bin", edges2, 0644)
+	// }
+	// GLOBAL_BUFFER.edges2 = edges2
 	return err
 }
 
@@ -37,7 +37,7 @@ var GLOBAL_BUFFER struct {
 }
 
 func (c *Cube) getHeuristic() uint8 {
-	heuristics := [3]uint8{c.getCornerHeuristic(), c.getEdge1Heuristic(), c.getEdge2Heuristic()}
+	heuristics := [3]uint8{c.getCornerHeuristic(), c.getEdge1Heuristic()} //, c.getEdge2Heuristic()}
 	max := uint8(0)
 	for _, h := range heuristics {
 		if max < h {
@@ -174,38 +174,94 @@ func createHeuristicCorner() []uint8 {
 
 // EDGE1 SECTION
 func (c *Cube) getEdge1Heuristic() uint8 {
-	// rank := c.getCornerRanking()
-	value := GLOBAL_BUFFER.corner[rank/2]
+	rank := c.getEdge1Ranking()
+	value := GLOBAL_BUFFER.edges1[rank/2]
 	if rank%2 == 1 {
 		value >>= 4
 	} else {
 		value &= 0xF
 	}
 	return value
+}
+
+func (c *Cube) getEdge1Ranking() uint {
+	// Rank the positions
+	rank_positions := uint(0)
+	m := uint(1)
+	// For each corner pos
+	for edge_index, edge_val := range c.edge_piece[:6] {
+		count_lesser := uint(0)
+		for _, other_edge := range c.edge_piece[edge_index+1:] {
+			// Count the number of edges that are less than it
+			if other_edge < edge_val {
+				count_lesser++
+			}
+		}
+		// update rank
+		rank_positions += m * count_lesser
+		// Increase weight to be max of the current ranked corners
+		m *= uint(12 - edge_index)
+	}
+	// Rank the orientations
+	rank_orientations := uint(0)
+	m = uint(1)
+	for _, edge_rot := range c.edge_rot[:6] {
+		if edge_rot {
+			rank_orientations += m
+		}
+		m *= 2
+	}
+	return rank_positions*64 + rank_orientations
 }
 
 func createHeuristicEdge1() []uint8 {
-	max_possible := 0
-	buffer := make([]uint8, max_possible)
-	// TODO: Write to buffer
-	return buffer
-}
-
-// EDGE2 SECTION
-func (c *Cube) getEdge2Heuristic() uint8 {
-	// rank := c.getCornerRanking()
-	value := GLOBAL_BUFFER.corner[rank/2]
-	if rank%2 == 1 {
-		value >>= 4
-	} else {
-		value &= 0xF
+	//12*11*10*9*8*7 * 2^6
+	max_possible := 42577920
+	// can fit 2 values into one uint8
+	buffer := make([]uint8, max_possible/2)
+	written := make([]bool, max_possible)
+	// Keep track of current and next layer
+	now := make([]*Cube, max_possible)
+	next := make([]*Cube, max_possible)
+	/*
+		This function will start from the solved state
+		and track how far away a state is from the end state
+	*/
+	c := newCube()
+	now[0] = &c
+	written[0] = true
+	i := 0
+	depth := 0
+	for i < max_possible {
+		for _, cube := range now {
+			// If we want to search it
+			if cube != nil {
+				rcube := cube.getEdge1Ranking()
+				if rcube%2 == 0 {
+					buffer[rcube/2] |= uint8(depth)
+				} else {
+					buffer[rcube/2] |= uint8(depth << 4)
+				}
+				if i%100000 == 0 {
+					fmt.Println(i)
+				}
+				i++
+				for x := range 18 {
+					move := Move(x)
+					c := *cube
+					c.move(move)
+					// add if not visited
+					c_rank := c.getEdge1Ranking()
+					if !written[c_rank] {
+						written[c_rank] = true
+						next[c_rank] = &c
+					}
+				}
+			}
+		}
+		depth++
+		now = next
+		next = make([]*Cube, max_possible)
 	}
-	return value
-}
-
-func createHeuristicEdge2() []uint8 {
-	max_possible := 0
-	buffer := make([]uint8, max_possible)
-	// TODO: Write to buffer
 	return buffer
 }
