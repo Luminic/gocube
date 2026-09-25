@@ -27,3 +27,7 @@ Maximum solve depth for an optimal solve is 5 turns, above that is too high for 
 4. Port code to mobile device.
 
 5. Add scanning ability for both web and mobile app
+
+## Problems
+
+Currently the LUT for the corners is calculated incorrectly as it throws away shorter routes to nodes and overestimates the distance in the heuristic, which no longer guarantees optimal solution.
