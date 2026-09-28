@@ -185,13 +185,18 @@ func (c *Cube) getEdge1Heuristic() uint8 {
 }
 
 func (c *Cube) getEdge1Ranking() uint {
+	// Adjust to track piece positions, instead of a positions piece.
+	piece_positions := [12]uint8{}
+	for i, piece := range c.edge_piece {
+		piece_positions[piece] = uint8(i)
+	}
 	// Rank the positions
 	rank_positions := uint(0)
 	m := uint(1)
 	// For each edge pos
-	for edge_index, edge_val := range c.edge_piece[:6] {
+	for edge_index, edge_val := range piece_positions[:6] {
 		count_lesser := uint(0)
-		for _, other_edge := range c.edge_piece[edge_index+1:] {
+		for _, other_edge := range piece_positions[edge_index+1:] {
 			// Count the number of edges that are less than it
 			if other_edge < edge_val {
 				count_lesser++
@@ -205,6 +210,7 @@ func (c *Cube) getEdge1Ranking() uint {
 	// Rank the orientations
 	rank_orientations := uint(0)
 	m = uint(1)
+	// This does not need to be changed as edge_rot at index i corresponds to piece i, not position i
 	for _, edge_rot := range c.edge_rot[:6] {
 		if edge_rot {
 			rank_orientations += m
@@ -279,15 +285,20 @@ func (c *Cube) getEdge2Heuristic() uint8 {
 }
 
 func (c *Cube) getEdge2Ranking() uint {
+	// Adjust to track piece positions, instead of a positions piece.
+	piece_positions := [12]uint8{}
+	for i, piece := range c.edge_piece {
+		piece_positions[piece] = uint8(i)
+	}
 	// Rank the positions
 	rank_positions := uint(0)
 	m := uint(1)
 	// For each edge pos
 	edge_index := 11
 	for edge_index >= 6 {
-		edge_val := c.edge_piece[edge_index]
+		edge_val := piece_positions[edge_index]
 		count_greater := uint(0)
-		for _, other_edge := range c.edge_piece[:edge_index] {
+		for _, other_edge := range piece_positions[:edge_index] {
 			// Count the number of edges that are greater than it
 			if other_edge > edge_val {
 				count_greater++
@@ -302,6 +313,7 @@ func (c *Cube) getEdge2Ranking() uint {
 	// Rank the orientations
 	rank_orientations := uint(0)
 	m = uint(1)
+	// This does not need to be changed as edge_rot at index i corresponds to piece i, not position i
 	for _, edge_rot := range c.edge_rot[6:] {
 		if edge_rot {
 			rank_orientations += m
