@@ -95,7 +95,7 @@ func (n *Node) IDA_rec(target *Cube, max_depth uint) *Node {
 	heuristic := n.cube.getHeuristic()
 	if max_depth < n.depth+uint(heuristic) {
 		return nil
-	} else if n.cube == *target {
+	} else if heuristic == 0 {
 		return n
 	}
 	for _, child := range n.get_children() {

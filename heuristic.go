@@ -36,13 +36,21 @@ var GLOBAL_BUFFER struct {
 	edges2 []uint8
 }
 
+var GLOBAL_MAX = uint8(20)
+
 func (c *Cube) getHeuristic() uint8 {
-	heuristics := [3]uint8{c.getCornerHeuristic(), c.getEdge1Heuristic(), c.getEdge2Heuristic()}
-	max := uint8(0)
-	for _, h := range heuristics {
-		if max < h {
-			max = h
-		}
+	max := c.getCornerHeuristic()
+	other := c.getEdge1Heuristic()
+	if max < other {
+		max = other
+	}
+	other = c.getEdge2Heuristic()
+	if max < other {
+		max = other
+	}
+	if max < GLOBAL_MAX {
+		fmt.Println(max)
+		GLOBAL_MAX = max
 	}
 	return max
 }
@@ -92,10 +100,13 @@ func unrankCorner(rank uint) Cube {
 	return Cube{corner_piece: corner_pos, corner_rot: corner_rot, edge_piece: edge_pos, edge_rot: edge_rot}
 }
 
+var CORNER_WEIGHTS_POSITION = [8]uint{1, 8, 56, 336, 1680, 6720, 20160, 40320}
+var CORNER_WEIGHTS_ORIENTATION = [7]uint{1, 3, 9, 27, 81, 243, 729}
+
 func (c *Cube) getCornerRanking() uint {
 	// Rank the positions
 	rank_positions := uint(0)
-	m := uint(1)
+	// m := uint(1)
 	// For each corner pos
 	for corner_index, corner_pos := range c.corner_piece {
 		count_lesser := uint(0)
@@ -106,16 +117,17 @@ func (c *Cube) getCornerRanking() uint {
 			}
 		}
 		// update rank
-		rank_positions += m * count_lesser
-		// Increase weight to be max of the current ranked corners
-		m *= uint(8 - corner_index)
+		rank_positions += CORNER_WEIGHTS_POSITION[corner_index] * count_lesser
+		// rank_positions += m * count_lesser
+		// // Increase weight to be max of the current ranked corners
+		// m *= uint(8 - corner_index)
 	}
 	// Rank the orientations
 	rank_orientations := uint(0)
-	m = uint(1)
-	for _, corner_rot := range c.corner_rot[:7] {
-		rank_orientations += m * uint(corner_rot)
-		m *= 3
+	// m = uint(1)
+	for i := range 7 {
+		rank_orientations += CORNER_WEIGHTS_ORIENTATION[i] * uint(c.corner_rot[i])
+		// m *= 3
 	}
 	return rank_positions*2187 + rank_orientations
 }
@@ -184,15 +196,17 @@ func (c *Cube) getEdge1Heuristic() uint8 {
 	return value
 }
 
+var EDGE_WEIGHTS_POSITION = [6]uint{1, 12, 132, 1320, 11880, 95040}
+
 func (c *Cube) getEdge1Ranking() uint {
 	// Adjust to track piece positions, instead of a positions piece.
-	piece_positions := [12]uint8{}
+	var piece_positions [12]uint8
 	for i, piece := range c.edge_piece {
 		piece_positions[piece] = uint8(i)
 	}
 	// Rank the positions
 	rank_positions := uint(0)
-	m := uint(1)
+	// m := uint(1)
 	// For each edge pos
 	for edge_index, edge_val := range piece_positions[:6] {
 		count_lesser := uint(0)
@@ -203,19 +217,17 @@ func (c *Cube) getEdge1Ranking() uint {
 			}
 		}
 		// update rank
-		rank_positions += m * count_lesser
-		// Increase weight to be max of the current ranked corners
-		m *= uint(12 - edge_index)
+		rank_positions += EDGE_WEIGHTS_POSITION[edge_index] * count_lesser
+		// // Increase weight to be max of the current ranked corners
+		// m *= uint(12 - edge_index)
 	}
 	// Rank the orientations
 	rank_orientations := uint(0)
-	m = uint(1)
 	// This does not need to be changed as edge_rot at index i corresponds to piece i, not position i
-	for _, edge_rot := range c.edge_rot[:6] {
-		if edge_rot {
-			rank_orientations += m
+	for i := range 6 {
+		if c.edge_rot[i] {
+			rank_orientations += 1 << i
 		}
-		m *= 2
 	}
 	return rank_positions*64 + rank_orientations
 }
@@ -286,13 +298,13 @@ func (c *Cube) getEdge2Heuristic() uint8 {
 
 func (c *Cube) getEdge2Ranking() uint {
 	// Adjust to track piece positions, instead of a positions piece.
-	piece_positions := [12]uint8{}
+	var piece_positions [12]uint8
 	for i, piece := range c.edge_piece {
 		piece_positions[piece] = uint8(i)
 	}
 	// Rank the positions
 	rank_positions := uint(0)
-	m := uint(1)
+	// m := uint(1)
 	// For each edge pos
 	edge_index := 11
 	for edge_index >= 6 {
@@ -305,20 +317,18 @@ func (c *Cube) getEdge2Ranking() uint {
 			}
 		}
 		// update rank
-		rank_positions += m * count_greater
+		rank_positions += EDGE_WEIGHTS_POSITION[11-edge_index] * count_greater
 		// Increase weight to be max of the current ranked corners
-		m *= uint(edge_index + 1)
+		// m *= uint(edge_index + 1)
 		edge_index--
 	}
 	// Rank the orientations
 	rank_orientations := uint(0)
-	m = uint(1)
 	// This does not need to be changed as edge_rot at index i corresponds to piece i, not position i
-	for _, edge_rot := range c.edge_rot[6:] {
-		if edge_rot {
-			rank_orientations += m
+	for i := range 6 {
+		if c.edge_rot[i+6] {
+			rank_orientations += 1 << i
 		}
-		m *= 2
 	}
 	return rank_positions*64 + rank_orientations
 }

@@ -1,6 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+	"os"
+	"runtime/pprof"
+)
 
 func main() {
 	err := initHeuristics()
@@ -9,6 +14,7 @@ func main() {
 	}
 	var i uint
 	for {
+		GLOBAL_MAX = 20
 		fmt.Print("Enter max turns: ")
 		fmt.Scan(&i)
 		c := newCube()
@@ -20,4 +26,23 @@ func main() {
 		c.manyMoves(sol)
 		fmt.Println(c.String())
 	}
+}
+
+func analyze() {
+	//Create file
+	f, err := os.Create("cpu.pprof")
+	if err != nil {
+		log.Fatalf("could not create CPU profile: %v", err)
+	}
+	defer f.Close()
+	// Start analysis
+	if err := pprof.StartCPUProfile(f); err != nil {
+		log.Fatalf("could not start CPU profile: %v", err)
+	}
+	defer pprof.StopCPUProfile()
+	c := newCube()
+	c.true_scramble(17)
+	n := newNode(c)
+	n.IDA()
+	// Run with go tool pprof -http=:8080 cpu.pprof
 }
