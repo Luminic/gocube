@@ -350,12 +350,12 @@ func (c *Cube) U() {
 
 func (c *Cube) D() {
 	//Corners 4->5->7->6
-	cval := [4]CornerPiece{4, 5, 7, 6}
+	cval := [4]CornerPiece{4, 6, 7, 5}
 	c.moveCorner(cval)
 	//FB<->LR
 	c.rotCorner(cval, WY_frontback, WY_leftright)
 	//Edges 8->10->11->9
-	c.moveEdge([4]EdgePiece{8, 10, 11, 9})
+	c.moveEdge([4]EdgePiece{8, 9, 11, 10})
 	//No change in rot
 }
 
@@ -416,10 +416,10 @@ func (c *Cube) UP() {
 }
 
 func (c *Cube) DP() {
-	cval := [4]CornerPiece{4, 6, 7, 5}
+	cval := [4]CornerPiece{4, 5, 7, 6}
 	c.moveCorner(cval)
 	c.rotCorner(cval, WY_frontback, WY_leftright)
-	c.moveEdge([4]EdgePiece{8, 9, 11, 10})
+	c.moveEdge([4]EdgePiece{8, 10, 11, 9})
 }
 
 func (c *Cube) LP() {

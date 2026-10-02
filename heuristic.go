@@ -36,8 +36,6 @@ var GLOBAL_BUFFER struct {
 	edges2 []uint8
 }
 
-var GLOBAL_MAX = uint8(20)
-
 func (c *Cube) getHeuristic() uint8 {
 	max := c.getCornerHeuristic()
 	other := c.getEdge1Heuristic()
@@ -47,10 +45,6 @@ func (c *Cube) getHeuristic() uint8 {
 	other = c.getEdge2Heuristic()
 	if max < other {
 		max = other
-	}
-	if max < GLOBAL_MAX {
-		fmt.Println(max)
-		GLOBAL_MAX = max
 	}
 	return max
 }
