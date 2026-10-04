@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type Node struct {
 	cube       Cube
 	prev_state *Node
@@ -77,6 +79,7 @@ func (n *Node) IDA() []Move {
 	target_state := newCube()
 	// Do Depth first search with max depth and heuristic
 	for max_depth := range uint(20) {
+		fmt.Println("Current depth:", max_depth)
 		node := n.IDA_rec(&target_state, max_depth)
 		if node != nil {
 			// Solution found!

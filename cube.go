@@ -2,7 +2,6 @@ package main
 
 import (
 	"math/rand"
-	"slices"
 )
 
 // Red front, white top
@@ -314,26 +313,60 @@ func (c *Cube) move(m Move) {
 	}
 }
 
-func (c *Cube) true_scramble(count uint) {
-	var temp Cube
-	past_states := []Cube{*c}
-	i := uint(0)
-	for i < count {
-		temp = *c
-		move_num := Move(rand.Intn(18))
-		temp.move(move_num)
-		if !slices.Contains(past_states, temp) {
-			past_states = append(past_states, temp)
-			c.move(move_num)
-			i++
-		}
+func (c *Cube) scramble(count uint) []Move {
+	moves := make([]Move, count)
+	for x := range count {
+		move := Move(rand.Intn(18))
+		moves[x] = move
+		c.move(move)
 	}
+	return moves
 }
 
-func (c *Cube) scramble(count uint) {
-	for range count {
-		c.move(Move(rand.Intn(18)))
+func english(moves []Move) string {
+	str := ""
+	for _, m := range moves {
+		switch m {
+		case U:
+			str += "U"
+		case UP:
+			str += "UP"
+		case U2:
+			str += "U2"
+		case F:
+			str += "F"
+		case FP:
+			str += "FP"
+		case F2:
+			str += "F2"
+		case L:
+			str += "L"
+		case LP:
+			str += "LP"
+		case L2:
+			str += "L2"
+		case D:
+			str += "D"
+		case DP:
+			str += "DP"
+		case D2:
+			str += "D2"
+		case B:
+			str += "B"
+		case BP:
+			str += "BP"
+		case B2:
+			str += "B2"
+		case R:
+			str += "R"
+		case RP:
+			str += "RP"
+		case R2:
+			str += "R2"
+		}
+		str += " "
 	}
+	return str
 }
 
 // Rotations
