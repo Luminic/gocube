@@ -159,7 +159,6 @@ type RCube struct {
 	cedges2 uint8  // 2^6 -> 6
 }
 
-// Solved Cube
 func (c *Cube) toRCube() RCube {
 	corner := c.getCornerRanking()
 	edges1 := c.getEdge1Ranking()
@@ -172,6 +171,21 @@ func (c *Cube) toRCube() RCube {
 	cedges2 := uint8(edges2 % 64)
 	rcube := RCube{pcorner, pedges1, pedges2, ccorner, cedges1, cedges2}
 	return rcube
+}
+
+func (c *RCube) toCube() Cube {
+	cc := unrankCorner(uint(c.pcorner)*2187 + uint(c.ccorner))
+	ce1 := unrankEdges1(uint(c.pedges1)*64 + uint(c.cedges1))
+	ce2 := unrankEdges2(uint(c.pedges2)*64 + uint(c.cedges2))
+	for i := range 12 {
+		cc.edge_rot[i] = ce1.edge_rot[i] || ce2.edge_rot[i]
+		if ce1.edge_piece[i] < 6 {
+			cc.edge_piece[i] = ce1.edge_piece[i]
+		} else {
+			cc.edge_piece[i] = ce2.edge_piece[i]
+		}
+	}
+	return cc
 }
 
 func (c *RCube) manyMoves(moves []Move) {

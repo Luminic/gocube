@@ -14,35 +14,23 @@ func main() {
 	}
 	var i uint
 	for {
-		fmt.Print("Rank: ")
-		fmt.Scan(&i)
-		c := unrankEdges1(i)
-		fmt.Println("First")
-		fmt.Println(c.getEdge1Ranking())
-		c = unrankEdges2(i)
-		fmt.Println("Second")
-		fmt.Println(c.getEdge2Ranking())
-	}
-}
-
-func reg() {
-	err := initHeuristics()
-	if err != nil {
-		fmt.Println("Could not create file!")
-	}
-	var i uint
-	for {
 		fmt.Print("Enter max turns: ")
 		fmt.Scan(&i)
 		c := newCube()
 		seq := english(c.scramble(i))
 		fmt.Println(c.String())
-		n := newNode(c)
+		fmt.Println(c.getCornerRanking(), c.getEdge1Ranking(), c.getEdge2Ranking())
+		// n := newNode(c)
 		fmt.Println(seq)
-		sol := n.IDA()
-		fmt.Println(english(sol))
-		c.manyMoves(sol)
+		// sol := n.IDA()
+		// fmt.Println(english(sol))
+		// c.manyMoves(sol)
+		// fmt.Println(c.String())
+
+		rc := c.toRCube()
+		c = rc.toCube()
 		fmt.Println(c.String())
+		fmt.Println(c.getCornerRanking(), c.getEdge1Ranking(), c.getEdge2Ranking())
 	}
 }
 
