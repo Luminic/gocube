@@ -14,28 +14,39 @@ func initRcube() {
 }
 
 var RCUBE_BUFFER struct {
-	pcorner [][]uint16 // 40320
-	pedges1 [][]uint32 // 665280
-	pedges2 [][]uint32 // 665280
-	ccorner [][]uint16 // 2187
-	cedges1 [][]uint8  // 64
-	cedges2 [][]uint8  // 64
+	pcorner []uint16 // 40320
+	pedges1 []uint32 // 665280
+	pedges2 []uint32 // 665280
+	ccorner []uint16 // 2187
+	cedges1 []uint8  // 64
+	cedges2 []uint8  // 64
 }
 
 // Corners
-func createTransitionCorner() {
+func createTransitionCorner() ([]uint16, []uint16) {
+	pbuffer := make([]uint16, 18*40320)
 	for i := range uint(40320) {
-		cube := unrankCorner(i)
+		cube := unrankCorner(i * 2187)
 		for m := range 18 {
 			c := cube
 			c.move(Move(m))
 			rank := c.getCornerRanking()
 			pcorner := uint16(rank / 2187)
-			ccorner := uint16(rank % 2187)
-			RCUBE_BUFFER.pcorner[i][m] = pcorner
-			RCUBE_BUFFER.ccorner[i][m] = ccorner
+			pbuffer[18*i+uint(m)] = pcorner
 		}
 	}
+	cbuffer := make([]uint16, 18*2187)
+	for i := range uint(2187) {
+		cube := unrankCorner(i)
+		for m := range 18 {
+			c := cube
+			c.move(Move(m))
+			rank := c.getCornerRanking()
+			ccorner := uint16(rank % 2187)
+			cbuffer[18*i+uint(m)] = ccorner
+		}
+	}
+	return pbuffer, cbuffer
 }
 
 // Edge group 1
@@ -80,19 +91,30 @@ func unrankEdges1(rank uint) Cube {
 	return Cube{corner_piece: corner_pos, corner_rot: corner_rot, edge_piece: edges_pos, edge_rot: edges_rot}
 }
 
-func createTransitionEdges1() {
+func createTransitionEdges1() ([]uint32, []uint8) {
+	pbuffer := make([]uint32, 18*665280)
 	for i := range uint(665280) {
+		cube := unrankEdges1(i * 64)
+		for m := range 18 {
+			c := cube
+			c.move(Move(m))
+			rank := c.getEdge1Ranking()
+			pedges1 := uint32(rank / 64)
+			pbuffer[18*i+uint(m)] = pedges1
+		}
+	}
+	cbuffer := make([]uint8, 18*64)
+	for i := range uint(64) {
 		cube := unrankEdges1(i)
 		for m := range 18 {
 			c := cube
 			c.move(Move(m))
 			rank := c.getEdge1Ranking()
-			pedges1 := uint16(rank / 64)
-			cedges1 := uint16(rank % 64)
-			RCUBE_BUFFER.pcorner[i][m] = pedges1
-			RCUBE_BUFFER.ccorner[i][m] = cedges1
+			cedges1 := uint8(rank % 64)
+			cbuffer[18*i+uint(m)] = cedges1
 		}
 	}
+	return pbuffer, cbuffer
 }
 
 // Edge group 2
@@ -134,19 +156,30 @@ func unrankEdges2(rank uint) Cube {
 	return Cube{corner_piece: corner_pos, corner_rot: corner_rot, edge_piece: edges_pos, edge_rot: edges_rot}
 }
 
-func createTransitionEdges2() {
+func createTransitionEdges2() ([]uint32, []uint8) {
+	pbuffer := make([]uint32, 18*665280)
 	for i := range uint(665280) {
+		cube := unrankEdges2(i * 64)
+		for m := range 18 {
+			c := cube
+			c.move(Move(m))
+			rank := c.getEdge2Ranking()
+			pedges2 := uint32(rank / 64)
+			pbuffer[18*i+uint(m)] = pedges2
+		}
+	}
+	cbuffer := make([]uint8, 18*64)
+	for i := range uint(64) {
 		cube := unrankEdges2(i)
 		for m := range 18 {
 			c := cube
 			c.move(Move(m))
 			rank := c.getEdge2Ranking()
-			pedges2 := uint16(rank / 64)
-			cedges2 := uint16(rank % 64)
-			RCUBE_BUFFER.pcorner[i][m] = pedges2
-			RCUBE_BUFFER.ccorner[i][m] = cedges2
+			cedges2 := uint8(rank % 64)
+			cbuffer[18*i+uint(m)] = cedges2
 		}
 	}
+	return pbuffer, cbuffer
 }
 
 // Cube
@@ -195,12 +228,12 @@ func (c *RCube) manyMoves(moves []Move) {
 }
 
 func (c *RCube) move(m Move) {
-	c.pcorner = RCUBE_BUFFER.pcorner[c.pcorner][m]
-	c.pedges1 = RCUBE_BUFFER.pedges1[c.pedges1][m]
-	c.pedges2 = RCUBE_BUFFER.pedges2[c.pedges2][m]
-	c.ccorner = RCUBE_BUFFER.ccorner[c.ccorner][m]
-	c.cedges1 = RCUBE_BUFFER.cedges1[c.cedges1][m]
-	c.cedges2 = RCUBE_BUFFER.cedges2[c.cedges2][m]
+	c.pcorner = RCUBE_BUFFER.pcorner[18*uint(c.pcorner)+uint(m)]
+	c.pedges1 = RCUBE_BUFFER.pedges1[18*uint(c.pedges1)+uint(m)]
+	c.pedges2 = RCUBE_BUFFER.pedges2[18*uint(c.pedges2)+uint(m)]
+	c.ccorner = RCUBE_BUFFER.ccorner[18*uint(c.ccorner)+uint(m)]
+	c.cedges1 = RCUBE_BUFFER.cedges1[18*uint(c.cedges1)+uint(m)]
+	c.cedges2 = RCUBE_BUFFER.cedges2[18*uint(c.cedges2)+uint(m)]
 }
 
 func (c *RCube) scramble(count uint) []Move {
