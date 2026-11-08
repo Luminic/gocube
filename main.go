@@ -14,6 +14,24 @@ func main() {
 	}
 	var i uint
 	for {
+		fmt.Print("Rank: ")
+		fmt.Scan(&i)
+		c := unrankEdges1(i)
+		fmt.Println("First")
+		fmt.Println(c.getEdge1Ranking())
+		c = unrankEdges2(i)
+		fmt.Println("Second")
+		fmt.Println(c.getEdge2Ranking())
+	}
+}
+
+func reg() {
+	err := initHeuristics()
+	if err != nil {
+		fmt.Println("Could not create file!")
+	}
+	var i uint
+	for {
 		fmt.Print("Enter max turns: ")
 		fmt.Scan(&i)
 		c := newCube()
