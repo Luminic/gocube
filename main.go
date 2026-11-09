@@ -9,6 +9,7 @@ import (
 
 func main() {
 	err := initHeuristics()
+	initRcube()
 	if err != nil {
 		fmt.Println("Could not create file!")
 	}
@@ -17,17 +18,18 @@ func main() {
 		fmt.Print("Enter max turns: ")
 		fmt.Scan(&i)
 		c := newCube()
-		seq := english(c.scramble(i))
+		rc := c.toRCube()
+		seq := c.scramble(i)
 		fmt.Println(c.String())
 		fmt.Println(c.getCornerRanking(), c.getEdge1Ranking(), c.getEdge2Ranking())
 		// n := newNode(c)
-		fmt.Println(seq)
+		fmt.Println(english(seq))
 		// sol := n.IDA()
 		// fmt.Println(english(sol))
 		// c.manyMoves(sol)
 		// fmt.Println(c.String())
 
-		rc := c.toRCube()
+		rc.manyMoves(seq)
 		c = rc.toCube()
 		fmt.Println(c.String())
 		fmt.Println(c.getCornerRanking(), c.getEdge1Ranking(), c.getEdge2Ranking())

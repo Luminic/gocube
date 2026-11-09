@@ -7,24 +7,24 @@ import (
 
 func initHeuristics() error {
 	// Corners
-	corner, err := os.ReadFile("corner_data.bin")
+	corner, err := os.ReadFile("data/corner_data.bin")
 	if err != nil {
 		corner = createHeuristicCorner()
-		err = os.WriteFile("corner_data.bin", corner, 0644)
+		err = os.WriteFile("data/corner_data.bin", corner, 0644)
 	}
 	GLOBAL_BUFFER.corner = corner
 	// Edge group 1
-	edges1, err := os.ReadFile("edges1_data.bin")
+	edges1, err := os.ReadFile("data/edges1_data.bin")
 	if err != nil {
 		edges1 = createHeuristicEdge1()
-		err = os.WriteFile("edges1_data.bin", edges1, 0644)
+		err = os.WriteFile("data/edges1_data.bin", edges1, 0644)
 	}
 	GLOBAL_BUFFER.edges1 = edges1
 	// Edge group 2
-	edges2, err := os.ReadFile("edges2_data.bin")
+	edges2, err := os.ReadFile("data/edges2_data.bin")
 	if err != nil {
 		edges2 = createHeuristicEdge2()
-		err = os.WriteFile("edges2_data.bin", edges2, 0644)
+		err = os.WriteFile("data/edges2_data.bin", edges2, 0644)
 	}
 	GLOBAL_BUFFER.edges2 = edges2
 	return err

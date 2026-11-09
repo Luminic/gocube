@@ -1,16 +1,51 @@
 package main
 
 import (
+	"fmt"
 	"math/rand"
+	"os"
+	"unsafe"
 )
 
+type UInts interface {
+	uint8 | uint16 | uint32
+}
+
+func getFile[T UInts](filename string, buffer *[]T, create func() []T) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		items := create()
+
+		var byteSlice []byte
+		if len(items) > 0 {
+			// Zero-copy cast []T to []byte for writing
+			byteSlice = unsafe.Slice((*byte)(unsafe.Pointer(&items[0])), len(items)*int(unsafe.Sizeof(items[0])))
+		}
+
+		if err := os.WriteFile(filename, byteSlice, 0644); err != nil {
+			fmt.Println("Failed to write to: ", filename)
+		}
+		*buffer = items
+	} else {
+		var zero T
+		elemSize := int(unsafe.Sizeof(zero))
+
+		if len(data) == 0 {
+			*buffer = []T{}
+		}
+
+		// Zero-copy reinterpret the file's byte buffer as []T
+		*buffer = unsafe.Slice((*T)(unsafe.Pointer(&data[0])), len(data)/elemSize)
+	}
+}
+
 func initRcube() {
-	// Corners
-	createTransitionCorner()
-	// Edge group 1
-	createTransitionEdges1()
-	// Edge group 2
-	createTransitionEdges2()
+	getFile("data/corner_t_p.bin", &RCUBE_BUFFER.pcorner, createTransitionCornerP)
+	getFile("data/corner_t_c.bin", &RCUBE_BUFFER.ccorner, createTransitionCornerC)
+	getFile("data/edges1_t_p.bin", &RCUBE_BUFFER.pedges1, createTransitionEdges1P)
+	getFile("data/edges1_t_c.bin", &RCUBE_BUFFER.cedges1, createTransitionEdges1C)
+	getFile("data/edges2_t_p.bin", &RCUBE_BUFFER.pedges2, createTransitionEdges2P)
+	getFile("data/edges2_t_c.bin", &RCUBE_BUFFER.cedges2, createTransitionEdges2C)
 }
 
 var RCUBE_BUFFER struct {
@@ -23,7 +58,7 @@ var RCUBE_BUFFER struct {
 }
 
 // Corners
-func createTransitionCorner() ([]uint16, []uint16) {
+func createTransitionCornerP() []uint16 {
 	pbuffer := make([]uint16, 18*40320)
 	for i := range uint(40320) {
 		cube := unrankCorner(i * 2187)
@@ -35,6 +70,10 @@ func createTransitionCorner() ([]uint16, []uint16) {
 			pbuffer[18*i+uint(m)] = pcorner
 		}
 	}
+	return pbuffer
+}
+
+func createTransitionCornerC() []uint16 {
 	cbuffer := make([]uint16, 18*2187)
 	for i := range uint(2187) {
 		cube := unrankCorner(i)
@@ -46,7 +85,7 @@ func createTransitionCorner() ([]uint16, []uint16) {
 			cbuffer[18*i+uint(m)] = ccorner
 		}
 	}
-	return pbuffer, cbuffer
+	return cbuffer
 }
 
 // Edge group 1
@@ -91,7 +130,7 @@ func unrankEdges1(rank uint) Cube {
 	return Cube{corner_piece: corner_pos, corner_rot: corner_rot, edge_piece: edges_pos, edge_rot: edges_rot}
 }
 
-func createTransitionEdges1() ([]uint32, []uint8) {
+func createTransitionEdges1P() []uint32 {
 	pbuffer := make([]uint32, 18*665280)
 	for i := range uint(665280) {
 		cube := unrankEdges1(i * 64)
@@ -103,6 +142,9 @@ func createTransitionEdges1() ([]uint32, []uint8) {
 			pbuffer[18*i+uint(m)] = pedges1
 		}
 	}
+	return pbuffer
+}
+func createTransitionEdges1C() []uint8 {
 	cbuffer := make([]uint8, 18*64)
 	for i := range uint(64) {
 		cube := unrankEdges1(i)
@@ -114,7 +156,7 @@ func createTransitionEdges1() ([]uint32, []uint8) {
 			cbuffer[18*i+uint(m)] = cedges1
 		}
 	}
-	return pbuffer, cbuffer
+	return cbuffer
 }
 
 // Edge group 2
@@ -156,7 +198,7 @@ func unrankEdges2(rank uint) Cube {
 	return Cube{corner_piece: corner_pos, corner_rot: corner_rot, edge_piece: edges_pos, edge_rot: edges_rot}
 }
 
-func createTransitionEdges2() ([]uint32, []uint8) {
+func createTransitionEdges2P() []uint32 {
 	pbuffer := make([]uint32, 18*665280)
 	for i := range uint(665280) {
 		cube := unrankEdges2(i * 64)
@@ -168,6 +210,9 @@ func createTransitionEdges2() ([]uint32, []uint8) {
 			pbuffer[18*i+uint(m)] = pedges2
 		}
 	}
+	return pbuffer
+}
+func createTransitionEdges2C() []uint8 {
 	cbuffer := make([]uint8, 18*64)
 	for i := range uint(64) {
 		cube := unrankEdges2(i)
@@ -179,7 +224,7 @@ func createTransitionEdges2() ([]uint32, []uint8) {
 			cbuffer[18*i+uint(m)] = cedges2
 		}
 	}
-	return pbuffer, cbuffer
+	return cbuffer
 }
 
 // Cube
