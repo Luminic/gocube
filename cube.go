@@ -209,39 +209,6 @@ func newCube() Cube {
 	return cube
 }
 
-func (c *Cube) moveCorner(clist [4]CornerPiece) {
-	cornerP := c.corner_piece[clist[3]]
-	c.corner_piece[clist[3]] = c.corner_piece[clist[2]]
-	c.corner_piece[clist[2]] = c.corner_piece[clist[1]]
-	c.corner_piece[clist[1]] = c.corner_piece[clist[0]]
-	c.corner_piece[clist[0]] = cornerP
-}
-func (c *Cube) rotCorner(clist [4]CornerPiece, r1 CornerRot, r2 CornerRot) {
-	for i := range 4 {
-		piece := c.corner_piece[clist[i]]
-		switch c.corner_rot[piece] {
-		case r1:
-			c.corner_rot[piece] = r2
-		case r2:
-			c.corner_rot[piece] = r1
-		}
-	}
-}
-
-func (c *Cube) moveEdge(elist [4]EdgePiece) {
-	edgeP := c.edge_piece[elist[3]]
-	c.edge_piece[elist[3]] = c.edge_piece[elist[2]]
-	c.edge_piece[elist[2]] = c.edge_piece[elist[1]]
-	c.edge_piece[elist[1]] = c.edge_piece[elist[0]]
-	c.edge_piece[elist[0]] = edgeP
-}
-func (c *Cube) rotEdge(clist [4]EdgePiece) {
-	for i := range 4 {
-		piece := c.edge_piece[clist[i]]
-		c.edge_rot[piece] = !c.edge_rot[piece]
-	}
-}
-
 type Move uint8
 
 const (
@@ -272,258 +239,55 @@ func (c *Cube) manyMoves(moves []Move) {
 	}
 }
 
-func (c *Cube) move(m Move) {
-	switch m {
-	case U:
-		c.U()
-	case UP:
-		c.UP()
-	case U2:
-		c.U2()
-	case F:
-		c.F()
-	case FP:
-		c.FP()
-	case F2:
-		c.F2()
-	case L:
-		c.L()
-	case LP:
-		c.LP()
-	case L2:
-		c.L2()
-	case D:
-		c.D()
-	case DP:
-		c.DP()
-	case D2:
-		c.D2()
-	case B:
-		c.B()
-	case BP:
-		c.BP()
-	case B2:
-		c.B2()
-	case R:
-		c.R()
-	case RP:
-		c.RP()
-	case R2:
-		c.R2()
+func (c *Cube) moveCorner(clist [4]CornerPiece, reverse bool) {
+	if reverse {
+		cornerP := c.corner_piece[clist[0]]
+		c.corner_piece[clist[0]] = c.corner_piece[clist[1]]
+		c.corner_piece[clist[1]] = c.corner_piece[clist[2]]
+		c.corner_piece[clist[2]] = c.corner_piece[clist[3]]
+		c.corner_piece[clist[3]] = cornerP
+	} else {
+		cornerP := c.corner_piece[clist[3]]
+		c.corner_piece[clist[3]] = c.corner_piece[clist[2]]
+		c.corner_piece[clist[2]] = c.corner_piece[clist[1]]
+		c.corner_piece[clist[1]] = c.corner_piece[clist[0]]
+		c.corner_piece[clist[0]] = cornerP
 	}
 }
-
-func (c *Cube) scramble(count uint) []Move {
-	moves := make([]Move, count)
-	for x := range count {
-		move := Move(rand.Intn(18))
-		moves[x] = move
-		c.move(move)
-	}
-	return moves
-}
-
-func english(moves []Move) string {
-	str := ""
-	for _, m := range moves {
-		switch m {
-		case U:
-			str += "U"
-		case UP:
-			str += "UP"
-		case U2:
-			str += "U2"
-		case F:
-			str += "F"
-		case FP:
-			str += "FP"
-		case F2:
-			str += "F2"
-		case L:
-			str += "L"
-		case LP:
-			str += "LP"
-		case L2:
-			str += "L2"
-		case D:
-			str += "D"
-		case DP:
-			str += "DP"
-		case D2:
-			str += "D2"
-		case B:
-			str += "B"
-		case BP:
-			str += "BP"
-		case B2:
-			str += "B2"
-		case R:
-			str += "R"
-		case RP:
-			str += "RP"
-		case R2:
-			str += "R2"
+func (c *Cube) rotCorner(clist [4]CornerPiece, r CornerRot) {
+	for i := range 4 {
+		r1, r2 := (r+1)%3, (r+2)%3
+		piece := c.corner_piece[clist[i]]
+		switch c.corner_rot[piece] {
+		case r1:
+			c.corner_rot[piece] = r2
+		case r2:
+			c.corner_rot[piece] = r1
 		}
-		str += " "
 	}
-	return str
 }
 
-// Rotations
-func (c *Cube) U() {
-	//Corners 0->1->3->2
-	cval := [4]CornerPiece{0, 1, 3, 2}
-	c.moveCorner(cval)
-	//FB<->LR
-	c.rotCorner(cval, WY_frontback, WY_leftright)
-	//Edges 0->2->3->1
-	c.moveEdge([4]EdgePiece{0, 2, 3, 1})
-	//No change in rot
-}
+func (c *Cube) moveEdge(elist [4]EdgePiece, reverse bool) {
+	if reverse {
+		edgeP := c.edge_piece[elist[0]]
+		c.edge_piece[elist[0]] = c.edge_piece[elist[1]]
+		c.edge_piece[elist[1]] = c.edge_piece[elist[2]]
+		c.edge_piece[elist[2]] = c.edge_piece[elist[3]]
+		c.edge_piece[elist[3]] = edgeP
+	} else {
+		edgeP := c.edge_piece[elist[3]]
+		c.edge_piece[elist[3]] = c.edge_piece[elist[2]]
+		c.edge_piece[elist[2]] = c.edge_piece[elist[1]]
+		c.edge_piece[elist[1]] = c.edge_piece[elist[0]]
+		c.edge_piece[elist[0]] = edgeP
 
-func (c *Cube) D() {
-	//Corners 4->5->7->6
-	cval := [4]CornerPiece{4, 6, 7, 5}
-	c.moveCorner(cval)
-	//FB<->LR
-	c.rotCorner(cval, WY_frontback, WY_leftright)
-	//Edges 8->10->11->9
-	c.moveEdge([4]EdgePiece{8, 9, 11, 10})
-	//No change in rot
+	}
 }
-
-func (c *Cube) L() {
-	//Corners 0->2->6->4
-	cval := [4]CornerPiece{0, 2, 6, 4}
-	c.moveCorner(cval)
-	//UD<->FB
-	c.rotCorner(cval, WY_updown, WY_frontback)
-	//Edges 1->6->9->4
-	c.moveEdge([4]EdgePiece{1, 6, 9, 4})
-	//No change in rot
-}
-
-func (c *Cube) R() {
-	//Corners 1->5->7->3
-	cval := [4]CornerPiece{1, 5, 7, 3}
-	c.moveCorner(cval)
-	//UD<->FB
-	c.rotCorner(cval, WY_updown, WY_frontback)
-	//Edges 2->5->10->7
-	c.moveEdge([4]EdgePiece{2, 5, 10, 7})
-	//No change in rot
-}
-
-func (c *Cube) F() {
-	//Corners 2->3->7->6
-	cval := [4]CornerPiece{2, 3, 7, 6}
-	c.moveCorner(cval)
-	//UD<->LR
-	c.rotCorner(cval, WY_updown, WY_leftright)
-	//Edges 3->7->11->6
-	eval := [4]EdgePiece{3, 7, 11, 6}
-	c.moveEdge(eval)
-	//Swap the 4 egdes
-	c.rotEdge(eval)
-}
-
-func (c *Cube) B() {
-	//Corners 0->4->5->1
-	cval := [4]CornerPiece{0, 4, 5, 1}
-	c.moveCorner(cval)
-	//UD<->LR
-	c.rotCorner(cval, WY_updown, WY_leftright)
-	//Edges 0->4->8->5
-	eval := [4]EdgePiece{0, 4, 8, 5}
-	c.moveEdge(eval)
-	//Swap the 4 egdes
-	c.rotEdge(eval)
-}
-
-// Backwards
-func (c *Cube) UP() {
-	cval := [4]CornerPiece{0, 2, 3, 1}
-	c.moveCorner(cval)
-	c.rotCorner(cval, WY_frontback, WY_leftright)
-	c.moveEdge([4]EdgePiece{0, 1, 3, 2})
-}
-
-func (c *Cube) DP() {
-	cval := [4]CornerPiece{4, 5, 7, 6}
-	c.moveCorner(cval)
-	c.rotCorner(cval, WY_frontback, WY_leftright)
-	c.moveEdge([4]EdgePiece{8, 10, 11, 9})
-}
-
-func (c *Cube) LP() {
-	cval := [4]CornerPiece{0, 4, 6, 2}
-	c.moveCorner(cval)
-	c.rotCorner(cval, WY_updown, WY_frontback)
-	c.moveEdge([4]EdgePiece{1, 4, 9, 6})
-}
-
-func (c *Cube) RP() {
-	cval := [4]CornerPiece{1, 3, 7, 5}
-	c.moveCorner(cval)
-	c.rotCorner(cval, WY_updown, WY_frontback)
-	c.moveEdge([4]EdgePiece{2, 7, 10, 5})
-}
-
-func (c *Cube) FP() {
-	cval := [4]CornerPiece{2, 6, 7, 3}
-	c.moveCorner(cval)
-	c.rotCorner(cval, WY_updown, WY_leftright)
-	eval := [4]EdgePiece{3, 6, 11, 7}
-	c.moveEdge(eval)
-	c.rotEdge(eval)
-}
-
-func (c *Cube) BP() {
-	cval := [4]CornerPiece{0, 1, 5, 4}
-	c.moveCorner(cval)
-	c.rotCorner(cval, WY_updown, WY_leftright)
-	eval := [4]EdgePiece{0, 5, 8, 4}
-	c.moveEdge(eval)
-	c.rotEdge(eval)
-}
-
-// Double
-func (c *Cube) U2() {
-	cval := [4]CornerPiece{0, 2, 3, 1}
-	c.moveCorner2(cval)
-	c.moveEdge2([4]EdgePiece{0, 1, 3, 2})
-}
-
-func (c *Cube) D2() {
-	cval := [4]CornerPiece{4, 6, 7, 5}
-	c.moveCorner2(cval)
-	c.moveEdge2([4]EdgePiece{8, 9, 11, 10})
-}
-
-func (c *Cube) L2() {
-	cval := [4]CornerPiece{0, 4, 6, 2}
-	c.moveCorner2(cval)
-	c.moveEdge2([4]EdgePiece{1, 4, 9, 6})
-}
-
-func (c *Cube) R2() {
-	cval := [4]CornerPiece{1, 3, 7, 5}
-	c.moveCorner2(cval)
-	c.moveEdge2([4]EdgePiece{2, 7, 10, 5})
-}
-
-func (c *Cube) F2() {
-	cval := [4]CornerPiece{2, 6, 7, 3}
-	c.moveCorner2(cval)
-	eval := [4]EdgePiece{3, 6, 11, 7}
-	c.moveEdge2(eval)
-}
-
-func (c *Cube) B2() {
-	cval := [4]CornerPiece{0, 1, 5, 4}
-	c.moveCorner2(cval)
-	eval := [4]EdgePiece{0, 5, 8, 4}
-	c.moveEdge2(eval)
+func (c *Cube) rotEdge(clist [4]EdgePiece) {
+	for i := range 4 {
+		piece := c.edge_piece[clist[i]]
+		c.edge_rot[piece] = !c.edge_rot[piece]
+	}
 }
 
 func (c *Cube) moveCorner2(clist [4]CornerPiece) {
@@ -542,4 +306,67 @@ func (c *Cube) moveEdge2(elist [4]EdgePiece) {
 	edgeP = c.edge_piece[elist[2]]
 	c.edge_piece[elist[2]] = c.edge_piece[elist[0]]
 	c.edge_piece[elist[0]] = edgeP
+}
+
+// Corners
+var cvals = [...][4]CornerPiece{
+	{0, 1, 3, 2},
+	{2, 3, 7, 6},
+	{0, 2, 6, 4},
+	{4, 6, 7, 5},
+	{0, 4, 5, 1},
+	{1, 5, 7, 3},
+}
+
+// Edges
+var evals = [...][4]EdgePiece{
+	{0, 2, 3, 1},
+	{3, 7, 11, 6},
+	{1, 6, 9, 4},
+	{8, 9, 11, 10},
+	{0, 4, 8, 5},
+	{2, 5, 10, 7},
+}
+
+func (c *Cube) move(m Move) {
+	v := m / 3
+	t := m % 3
+
+	cval := cvals[v]
+	eval := evals[v]
+
+	if t == 2 {
+		//no rot corner
+		c.moveCorner2(cval)
+		c.moveEdge2(eval)
+	} else {
+		c.moveCorner(cval, t == 1)
+		c.rotCorner(cval, CornerRot(v%3))
+		c.moveEdge(eval, t == 1)
+
+		// F and R
+		if v == 1 || v == 4 {
+			c.rotEdge(eval)
+		}
+	}
+}
+
+func (c *Cube) scramble(count uint) []Move {
+	moves := make([]Move, count)
+	for x := range count {
+		move := Move(rand.Intn(18))
+		moves[x] = move
+		c.move(move)
+	}
+	return moves
+}
+
+func english(moves []Move) string {
+	rep := [...]string{"U", "F", "L", "D", "B", "R"}
+	other := [...]string{"", "P", "2"}
+	str := ""
+	for _, m := range moves {
+		str += rep[m/3] + other[m%3] + " "
+	}
+	return str
 }
