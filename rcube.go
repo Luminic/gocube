@@ -41,23 +41,26 @@ func getFile[T UInts](filename string, buffer *[]T, create func() []T) {
 
 func initRcube() {
 	getFile("data/corner_t_p.bin", &RCUBE_BUFFER.pcorner, createTransitionCornerP)
-	getFile("data/corner_t_c.bin", &RCUBE_BUFFER.ccorner, createTransitionCornerC)
 	getFile("data/edges1_t_p.bin", &RCUBE_BUFFER.pedges1, createTransitionEdges1P)
-	getFile("data/edges1_t_c.bin", &RCUBE_BUFFER.cedges1, createTransitionEdges1C)
 	getFile("data/edges2_t_p.bin", &RCUBE_BUFFER.pedges2, createTransitionEdges2P)
-	getFile("data/edges2_t_c.bin", &RCUBE_BUFFER.cedges2, createTransitionEdges2C)
+
+	getFile("data/corner_t_m.bin", &RCUBE_BUFFER.swapcorners, createTransitionCornersRank)
+	getFile("data/corner_t_c.bin", &RCUBE_BUFFER.ccorner, createTransitionCornerC)
+	getFile("data/edges1_t_m.bin", &RCUBE_BUFFER.swapedges1, createTransitionEdges1Mask)
+	getFile("data/edges2_t_m.bin", &RCUBE_BUFFER.swapedges2, createTransitionEdges2Mask)
 }
 
 var RCUBE_BUFFER struct {
-	pcorner []uint16 // 40320
-	pedges1 []uint32 // 665280
-	pedges2 []uint32 // 665280
-	ccorner []uint16 // 2187
-	cedges1 []uint8  // 64
-	cedges2 []uint8  // 64
+	pcorner     []uint16 // 40320 * 18
+	pedges1     []uint32 // 665280 * 18
+	pedges2     []uint32 // 665280 * 18
+	swapcorners []uint8  // 40320 * 18
+	ccorner     []uint16 // 256 * 2187 * 18
+	swapedges1  []uint8  // 665280 * 18
+	swapedges2  []uint8  // 665280 * 18
 }
 
-// Corners
+// This function pre-calculates how one permutation moves to the next
 func createTransitionCornerP() []uint16 {
 	pbuffer := make([]uint16, 18*40320)
 	for i := range uint(40320) {
@@ -73,19 +76,81 @@ func createTransitionCornerP() []uint16 {
 	return pbuffer
 }
 
-func createTransitionCornerC() []uint16 {
-	cbuffer := make([]uint16, 18*2187)
-	for i := range uint(2187) {
-		cube := unrankCorner(i)
+func nchoosek(n uint, k uint) uint {
+	if n < k {
+		return 0
+	}
+	o := n - k
+	if o > k {
+		o, k = k, o
+	}
+	p := uint(1)
+	for n > k {
+		p *= n
+		n -= 1
+	}
+	for o > 1 {
+		p /= o
+		o -= 1
+	}
+	return p
+}
+
+func swapCornersRank(a *Cube, b *Cube) uint8 {
+	val := uint8(1)
+	exists := false
+	left := 4
+	//remap pieces
+	var piece_positions [8]uint8
+	for i, piece := range a.corner_piece {
+		piece_positions[piece] = uint8(i)
+	}
+	for x := range 8 {
+		if CornerPiece(x) != b.corner_piece[piece_positions[x]] {
+			val += uint8(nchoosek(uint(7-x), uint(left)))
+			left -= 1
+			exists = true
+		}
+	}
+	if !exists {
+		return 0
+	}
+	return val
+}
+
+// This function pre-calculates which corners get their orientation changed depending on permutation and move
+func createTransitionCornersRank() []uint8 {
+	buffer := make([]uint8, 18*40320)
+	for i := range uint(40320) {
+		cube := unrankCorner(i * 2187)
 		for m := range 18 {
 			c := cube
 			c.move(Move(m))
-			rank := c.getCornerRanking()
-			ccorner := uint16(rank % 2187)
-			cbuffer[18*i+uint(m)] = ccorner
+			val := swapCornersRank(&cube, &c)
+			buffer[18*i+uint(m)] = val
 		}
 	}
-	return cbuffer
+	return buffer
+}
+
+// This function pre-calculates what a new cubes orienation is depending on current orientation, which corners move, and what move
+func createTransitionCornerC() []uint16 {
+	buffer := make([]uint16, 18*71*2187)
+	for j := range uint(40320) {
+		for i := range uint(2187) {
+			cube := unrankCorner(j*2187 + i)
+			for m := range 18 {
+				c := cube
+				c.move(Move(m))
+				val := swapCornersRank(&cube, &c)
+				buffer[18*71*i+18*uint(val)+uint(m)] = uint16(c.getCornerRanking() % 2187)
+			}
+		}
+		if j%1000 == 0 {
+			fmt.Println(j)
+		}
+	}
+	return buffer
 }
 
 // Edge group 1
@@ -144,19 +209,28 @@ func createTransitionEdges1P() []uint32 {
 	}
 	return pbuffer
 }
-func createTransitionEdges1C() []uint8 {
-	cbuffer := make([]uint8, 18*64)
-	for i := range uint(64) {
-		cube := unrankEdges1(i)
+func createTransitionEdges1Mask() []uint8 {
+	buffer := make([]uint8, 18*665280)
+	for i := range uint(665280) {
+		cube := unrankEdges1(i * 64)
 		for m := range 18 {
 			c := cube
 			c.move(Move(m))
-			rank := c.getEdge1Ranking()
-			cedges1 := uint8(rank % 64)
-			cbuffer[18*i+uint(m)] = cedges1
+			//remap pieces
+			var piece_positions [12]uint8
+			for i, piece := range cube.edge_piece {
+				piece_positions[piece] = uint8(i)
+			}
+			val := uint8(0)
+			for x := range 6 {
+				if (EdgePiece(x) != c.edge_piece[piece_positions[x]]) && (cube.edge_rot[x] != c.edge_rot[x]) {
+					val |= 1 << x
+				}
+			}
+			buffer[18*i+uint(m)] = val
 		}
 	}
-	return cbuffer
+	return buffer
 }
 
 // Edge group 2
@@ -212,19 +286,28 @@ func createTransitionEdges2P() []uint32 {
 	}
 	return pbuffer
 }
-func createTransitionEdges2C() []uint8 {
-	cbuffer := make([]uint8, 18*64)
-	for i := range uint(64) {
-		cube := unrankEdges2(i)
+func createTransitionEdges2Mask() []uint8 {
+	buffer := make([]uint8, 18*665280)
+	for i := range uint(665280) {
+		cube := unrankEdges2(i * 64)
 		for m := range 18 {
 			c := cube
 			c.move(Move(m))
-			rank := c.getEdge2Ranking()
-			cedges2 := uint8(rank % 64)
-			cbuffer[18*i+uint(m)] = cedges2
+			//remap pieces
+			var piece_positions [12]uint8
+			for i, piece := range cube.edge_piece {
+				piece_positions[piece] = uint8(i)
+			}
+			val := uint8(0)
+			for x := range 6 {
+				if (EdgePiece(x+6) != c.edge_piece[piece_positions[x+6]]) && (cube.edge_rot[x+6] != c.edge_rot[x+6]) {
+					val |= 1 << x
+				}
+			}
+			buffer[18*i+uint(m)] = val
 		}
 	}
-	return cbuffer
+	return buffer
 }
 
 // Cube
@@ -273,12 +356,12 @@ func (c *RCube) manyMoves(moves []Move) {
 }
 
 func (c *RCube) move(m Move) {
+	c.ccorner = RCUBE_BUFFER.ccorner[71*18*uint(c.ccorner)+18*uint(RCUBE_BUFFER.swapcorners[18*uint(c.pcorner)+uint(m)])+uint(m)]
+	c.cedges1 ^= RCUBE_BUFFER.swapedges1[18*uint(c.pedges1)+uint(m)]
+	c.cedges2 ^= RCUBE_BUFFER.swapedges2[18*uint(c.pedges2)+uint(m)]
 	c.pcorner = RCUBE_BUFFER.pcorner[18*uint(c.pcorner)+uint(m)]
 	c.pedges1 = RCUBE_BUFFER.pedges1[18*uint(c.pedges1)+uint(m)]
 	c.pedges2 = RCUBE_BUFFER.pedges2[18*uint(c.pedges2)+uint(m)]
-	c.ccorner = RCUBE_BUFFER.ccorner[18*uint(c.ccorner)+uint(m)]
-	c.cedges1 = RCUBE_BUFFER.cedges1[18*uint(c.cedges1)+uint(m)]
-	c.cedges2 = RCUBE_BUFFER.cedges2[18*uint(c.cedges2)+uint(m)]
 }
 
 func (c *RCube) scramble(count uint) []Move {
