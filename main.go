@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"os"
-	"runtime/pprof"
 )
 
 func main() {
@@ -13,41 +10,40 @@ func main() {
 	if err != nil {
 		fmt.Println("Could not create file!")
 	}
-	for range 50 {
-		c := newCube()
-		rc := c.toRCube()
-		seq := c.scramble(4)
-		// fmt.Println(c.String())
-		// n := newNode(c)
+	var i uint
+	for {
+		fmt.Print("Enter num: ")
+		fmt.Scan(&i)
+		cc := newCube()
+		c := cc.toRCube()
+		seq := c.scramble(i)
+		cc.manyMoves(seq)
+		fmt.Println(cc.String())
+		n := newNode(c)
 		fmt.Println(english(seq))
-		fmt.Println(c.getCornerRanking(), c.getEdge1Ranking(), c.getEdge2Ranking())
-		// sol := n.IDA()
-		// fmt.Println(english(sol))
-		// c.manyMoves(sol)
-		// fmt.Println(c.String())
-
-		rc.manyMoves(seq)
-		c = rc.toCube()
-		// fmt.Println(c.String())
-		fmt.Println(c.getCornerRanking(), c.getEdge1Ranking(), c.getEdge2Ranking())
+		sol := n.IDA()
+		fmt.Println(english(sol))
+		c.manyMoves(sol)
+		cc.manyMoves(sol)
+		fmt.Println(cc.String())
 	}
 }
 
-func analyze() {
-	//Create file
-	f, err := os.Create("cpu.pprof")
-	if err != nil {
-		log.Fatalf("could not create CPU profile: %v", err)
-	}
-	defer f.Close()
-	// Start analysis
-	if err := pprof.StartCPUProfile(f); err != nil {
-		log.Fatalf("could not start CPU profile: %v", err)
-	}
-	defer pprof.StopCPUProfile()
-	c := newCube()
-	c.scramble(17)
-	n := newNode(c)
-	n.IDA()
-	// Run with go tool pprof -http=:8080 cpu.pprof
-}
+// func analyze() {
+// 	//Create file
+// 	f, err := os.Create("cpu.pprof")
+// 	if err != nil {
+// 		log.Fatalf("could not create CPU profile: %v", err)
+// 	}
+// 	defer f.Close()
+// 	// Start analysis
+// 	if err := pprof.StartCPUProfile(f); err != nil {
+// 		log.Fatalf("could not start CPU profile: %v", err)
+// 	}
+// 	defer pprof.StopCPUProfile()
+// 	c := newCube()
+// 	c.scramble(17)
+// 	n := newNode(c)
+// 	n.IDA()
+// 	// Run with go tool pprof -http=:8080 cpu.pprof
+// }

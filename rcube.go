@@ -50,6 +50,50 @@ func initRcube() {
 	getFile("data/edges2_t_m.bin", &RCUBE_BUFFER.swapedges2, createTransitionEdges2Mask)
 }
 
+func (c *RCube) getHeuristic() uint8 {
+	max := c.getCornerHeuristic()
+	other := c.getEdge1Heuristic()
+	if max < other {
+		max = other
+	}
+	other = c.getEdge2Heuristic()
+	if max < other {
+		max = other
+	}
+	return max
+}
+
+func (c *RCube) getCornerHeuristic() uint8 {
+	rank := uint(c.pcorner)*2187 + uint(c.ccorner)
+	value := GLOBAL_BUFFER.corner[rank/2]
+	if rank%2 == 1 {
+		value >>= 4
+	} else {
+		value &= 0xF
+	}
+	return value
+}
+func (c *RCube) getEdge1Heuristic() uint8 {
+	rank := uint(c.pedges1)*64 + uint(c.cedges1)
+	value := GLOBAL_BUFFER.edges1[rank/2]
+	if rank%2 == 1 {
+		value >>= 4
+	} else {
+		value &= 0xF
+	}
+	return value
+}
+func (c *RCube) getEdge2Heuristic() uint8 {
+	rank := uint(c.pedges2)*64 + uint(c.cedges2)
+	value := GLOBAL_BUFFER.edges2[rank/2]
+	if rank%2 == 1 {
+		value >>= 4
+	} else {
+		value &= 0xF
+	}
+	return value
+}
+
 var RCUBE_BUFFER struct {
 	pcorner     []uint16 // 40320 * 18
 	pedges1     []uint32 // 665280 * 18

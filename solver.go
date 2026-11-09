@@ -3,13 +3,13 @@ package main
 import "fmt"
 
 type Node struct {
-	cube       Cube
+	cube       RCube
 	prev_state *Node
 	last_turn  Move
 	depth      uint
 }
 
-func newNode(c Cube) Node {
+func newNode(c RCube) Node {
 	return Node{cube: c, prev_state: nil, last_turn: NO_MOVE, depth: 0}
 }
 
@@ -58,7 +58,8 @@ func (n *Node) get_children() []Node {
 }
 
 func (n *Node) bfs() []Move {
-	target_state := newCube()
+	ts := newCube()
+	target_state := ts.toRCube()
 	queue := []Node{*n}
 	for {
 		node := queue[0]
@@ -76,11 +77,10 @@ func (n *Node) bfs() []Move {
 }
 
 func (n *Node) IDA() []Move {
-	target_state := newCube()
 	// Do Depth first search with max depth and heuristic
 	for max_depth := range uint(20) {
 		fmt.Println("Current depth:", max_depth)
-		node := n.IDA_rec(&target_state, max_depth)
+		node := n.IDA_rec(max_depth)
 		if node != nil {
 			// Solution found!
 			sol := []Move{}
@@ -94,7 +94,7 @@ func (n *Node) IDA() []Move {
 	return nil
 }
 
-func (n *Node) IDA_rec(target *Cube, max_depth uint) *Node {
+func (n *Node) IDA_rec(max_depth uint) *Node {
 	heuristic := n.cube.getHeuristic()
 	if max_depth < n.depth+uint(heuristic) {
 		return nil
@@ -102,7 +102,7 @@ func (n *Node) IDA_rec(target *Cube, max_depth uint) *Node {
 		return n
 	}
 	for _, child := range n.get_children() {
-		potential_solution := child.IDA_rec(target, max_depth)
+		potential_solution := child.IDA_rec(max_depth)
 		if potential_solution != nil {
 			return potential_solution
 		}
