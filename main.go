@@ -13,17 +13,14 @@ func main() {
 	if err != nil {
 		fmt.Println("Could not create file!")
 	}
-	var i uint
-	for {
-		fmt.Print("Enter max turns: ")
-		fmt.Scan(&i)
+	for range 50 {
 		c := newCube()
 		rc := c.toRCube()
-		seq := c.scramble(i)
-		fmt.Println(c.String())
-		fmt.Println(c.getCornerRanking(), c.getEdge1Ranking(), c.getEdge2Ranking())
+		seq := c.scramble(4)
+		// fmt.Println(c.String())
 		// n := newNode(c)
 		fmt.Println(english(seq))
+		fmt.Println(c.getCornerRanking(), c.getEdge1Ranking(), c.getEdge2Ranking())
 		// sol := n.IDA()
 		// fmt.Println(english(sol))
 		// c.manyMoves(sol)
@@ -31,7 +28,7 @@ func main() {
 
 		rc.manyMoves(seq)
 		c = rc.toCube()
-		fmt.Println(c.String())
+		// fmt.Println(c.String())
 		fmt.Println(c.getCornerRanking(), c.getEdge1Ranking(), c.getEdge2Ranking())
 	}
 }
